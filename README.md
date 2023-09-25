@@ -1,25 +1,24 @@
 # krakenSankey
 
-### Commandline
 This repository contains an R file that can be run with `Rscript` from the cli
-to sankey html plots from kraken report files:
-```
-Rscript krakenSankey.R kraken.report
-```
-Functions in `krakenSankey.R` require the 
-[sankeyD3](https://github.com/fbreitwieser/sankeyD3) package which itself
-has a number of dependencies. 
+to create sankey html plots from kraken report files.
 
-### Docker
-The repository also contains a `Dockerfile` to build a Docker image that already
-contains all required R packages. The Docker image can also be obtained from 
-the author's [DockerHub](https://hub.docker.com/r/lorenzgerber/krakensankey/).
+## Basic Usage
 
-The syntax for running dockerized:
+Use conda to install R and other dependencies using the `environment.yml` file.
+
 ```
-docker run -v /host/path/to/krakenreport/:/data/ lorenzgerber/krakensankey kraken.report
+# Create environment
+conda create env -f environment.yml
+
+# Activate environment
+conda activate krakenSankey
+
+# Create sankey plot from kraken report
+Rscript krakenSankey.R kraken.report sankey_plot.html
 ```
-The result file, `kraken.html` is written in the mounted directory.
+
+Functions in `krakenSankey.R` requires several packages and attempts to install them for you if they are missing. If an error occurs, please try to install the packages manually.
 
 ### References / Acknowledgments
 Most of the code in this repo is 1:1 extracted from Florian Breitwieser's repo
