@@ -10,8 +10,8 @@ main <- function() {
 
   # Check R version before continuing
   r_version <- matrix(unlist(strsplit(R.version.string, split = ' ')), byrow = T)[3]
-  if (r_version < "4.0.0" | r_version >= "4.2.0") {
-    stop(sprintf("R version `%s` is incompatible. Please use R version >= `4.0.0` and < `4.2.0`.", r_version))
+  if (!(r_version >= "4.2.0")) {
+    stop(sprintf("R version `%s` is incompatible. Please use R version >= `4.2.0`.", r_version))
   }
 
   # Set CRAN repo to default location
@@ -120,7 +120,7 @@ read_report <- function(myfile, has_header=NULL, check_file = FALSE) {
     if (length(txt) == 0)
       return(FALSE)
     raw <- charToRaw(txt)
-    all(raw <= as.raw(127) && (raw >= as.raw(32) | raw == as.raw(9)))
+    all(raw <= as.raw(127) & (raw >= as.raw(32) | raw == as.raw(9)))
   }
   if (length(first.line) == 0) {
     dmessage("Could not read ", myfile, ".")
