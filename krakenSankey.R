@@ -10,7 +10,7 @@ main <- function() {
 
   # Check R version before continuing
   r_version <- matrix(unlist(strsplit(R.version.string, split = ' ')), byrow = T)[3]
-  if (!(r_version >= "4.2.0")) {
+  if (!r_version >= "4.2.0") {
     stop(sprintf("R version `%s` is incompatible. Please use R version >= `4.2.0`.", r_version))
   }
 
@@ -30,6 +30,10 @@ main <- function() {
     install.packages('webshot', dependencies = TRUE)
   } else if (!require(magrittr)) {
     install.packages('magrittr', dependencies = TRUE)
+  } else if (!require(devtools)) {
+    install.packages("devtools", dependencies = TRUE)
+  } else if (!require(sankeyD3)) {
+    devtools::install_github("fbreitwieser/sankeyD3")
   } else if (!require(networkD3)) {
     install.packages('networkD3', dependencies = TRUE)
   }
