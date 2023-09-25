@@ -7,22 +7,91 @@ main <- function() {
   # Ex. usage:
   #   Rscript krakenSanky.R kraken.report
   #
+
+  # Check R version before continuing
+  r_version <- matrix(unlist(strsplit(R.version.string, split = ' ')), byrow = T)[3]
+  if (r_version < "4.0.0" | r_version >= "4.2.0") {
+    stop(sprintf("R version `%s` is incompatible. Please use R version >= `4.0.0` and < `4.2.0`.", r_version))
+  }
+
+  # Set CRAN repo to default location
+  local({
+          r <- getOption("repos")
+          r["CRAN"] <- "https://cloud.r-project.org"
+          options(repos = r)
+        })
+
+  # Check if packages are installed
+  if (!require(plyr)) {
+    install.packages('plyr', dependencies = TRUE)
+  } else if (!require(tools)) {
+    install.packages('tools', dependencies = TRUE)
+  } else if (!require(webshot)) {
+    install.packages('webshot', dependencies = TRUE)
+  } else if (!require(magrittr)) {
+    install.packages('magrittr', dependencies = TRUE)
+  } else if (!require(networkD3)) {
+    install.packages('networkD3', dependencies = TRUE)
+  }
+
+  # Load libraries
+  library(plyr)
+  library(tools)
+  library(webshot)
   library(magrittr)
   library(networkD3)
-  
-  # get input args
+
+  # Get input args
   args <- commandArgs(trailingOnly = TRUE)
-  filepath <- toString(args[1])
-  
+
+  # Handle missing input params
+  if (length(args) != 2) {
+    stop("Missing parameters. Script usage: `Rscript krakenSankey.R <kraken.report> <output_file.html>`.")
+  } else {
+    filepath <- toString(args[1])
+    output_file <- toString(args[2])  # can have `.html` or `.png`
+  }
+
+  # Check output file extension to convert to png if needed
+  if (tools::file_ext(output_file) == "png") {
+    convert_file <- TRUE
+
+    # Convert output to html for initial output
+    output_file <- gsub(".png", ".html", output_file)
+  } else {
+    convert_file <- FALSE
+
+    # If file ext is not png or html, make it html
+    if (tools::file_ext(output_file) != "html" && tools::file_ext(output_file) != "png") {
+      get_extension <- tools::file_ext(output_file)
+      output_file <- gsub(get_extension, "html", output_file)
+    } else if (tools::file_ext(output_file) == "") {
+      output_file <- paste(output_file, ".html", sep = '')
+    }
+  }
+
   # Load data
   report <- read_report(filepath)
-  
-  # Construct filename
-  basename <- sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(filepath))
-  output_file <- paste(basename,'.html', sep = '')
-  
-  # Output to png file
+
+  # Output to html file
   build_sankey_network(report) %>% saveNetwork(file = output_file)
+
+  # Convert file to png if convert_file = TRUE
+  if (convert_file) {
+    converted_file_name <- gsub(".html", ".png", output_file)
+
+    # Use webshot to convert html to png
+    webshot::webshot(url = output_file, file = converted_file_name)
+
+    # Remove original html file
+    unlink(output_file)
+  }
+
+  # Delete R package output directory if found
+  possible_dir <- sprintf("%s_files", tools::file_path_sans_ext(output_file))
+  if (file_test('-d', possible_dir)) {
+    unlink(possible_dir, recursive = TRUE)
+  }
 }
 
 
@@ -256,6 +325,9 @@ read_report <- function(myfile, has_header=NULL, check_file = FALSE) {
   }
   stopifnot(all(std_colnames %in% colnames(report)))
   report[, c(std_colnames, setdiff(colnames(report), std_colnames))]
+
+  # Drop rows that have 0 cladeReads
+  report <- report[!(report$cladeReads==0),]
 }
 
 
@@ -350,7 +422,7 @@ read_report2 <- function(myfile,collapse=TRUE,keep_taxRanks=c("D","K","P","C","O
         report[i,report[i,'taxRank']] <- report[i,'name']
       }
     }
-    
+
     rows_to_consider[i] <- TRUE
   }
 
@@ -464,7 +536,7 @@ filter_taxon <- function(report, filter_taxon, rm_clade = TRUE, do_message=FALSE
 
 
 build_sankey_network <- function(my_report, taxRanks =  c("D","K","P","C","O","F","G","S"), maxn=10,
-                                 zoom = F, title = NULL,
+                                 zoom = TRUE, title = NULL,
                                  ...) {
   stopifnot("taxRank" %in% colnames(my_report))
   if (!any(taxRanks %in% my_report$taxRank)) {
@@ -531,22 +603,22 @@ build_sankey_network <- function(my_report, taxRanks =  c("D","K","P","C","O","F
       NodeGroup = "name",
       NodePosX = "depth",
       NodeValue = "value",
-      #dragY = TRUE,
+      dragY = TRUE,
+      dragX = TRUE,
       xAxisDomain = my_taxRanks,
       numberFormat = "pavian",
       title = title,
-      nodeWidth = 15,
-      #linkGradient = TRUE,
-      #nodeShadow = TRUE,
       nodeCornerRadius = 5,
       units = "cladeReads",
       fontSize = 12,
-      iterations = maxn * 100,
+      iterations = maxn * 1000,
       align = "none",
       highlightChildLinks = TRUE,
       orderByPath = TRUE,
-      scaleNodeBreadthsByString = TRUE,
+      scaleNodeBreadthsByString = FALSE,
       zoom = zoom,
+      width = 1500,
+      height = 1000,
       ...
     )
 }
