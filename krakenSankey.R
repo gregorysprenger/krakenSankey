@@ -1,12 +1,12 @@
 main <- function() {
   # Producing a Sanky Plot from a Kraken report file.
   #
-  # Takes one argument:
+  # Takes two arguments:
   # The file name of the kraken report.
+  # The file name of output including a file extension
   #
   # Ex. usage:
-  #   Rscript krakenSanky.R kraken.report
-  #
+  #   Rscript krakenSanky.R kraken.report pavian.html
 
   # Check R version before continuing
   r_version <- matrix(unlist(strsplit(R.version.string, split = ' ')), byrow = T)[3]
