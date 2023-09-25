@@ -22,20 +22,13 @@ main <- function() {
         })
 
   # Check if packages are installed
-  if (!require(plyr)) {
-    install.packages('plyr', dependencies = TRUE)
-  } else if (!require(tools)) {
-    install.packages('tools', dependencies = TRUE)
-  } else if (!require(webshot)) {
-    install.packages('webshot', dependencies = TRUE)
-  } else if (!require(magrittr)) {
-    install.packages('magrittr', dependencies = TRUE)
-  } else if (!require(devtools)) {
-    install.packages("devtools", dependencies = TRUE)
-  } else if (!require(sankeyD3)) {
+  list.of.packages <- c("plyr", "tools", "webshot", "magrittr", "networkD3")
+  new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+  if(length(new.packages)) install.packages(new.packages)
+
+  # Install sankeyD3 from github if missing
+  if (!require(sankeyD3)) {
     devtools::install_github("fbreitwieser/sankeyD3")
-  } else if (!require(networkD3)) {
-    install.packages('networkD3', dependencies = TRUE)
   }
 
   # Load libraries
